@@ -1,0 +1,17 @@
+.coverage
+htmlcov/
+.idea/
+*.min.css
+*.min.js
+*.pyc
+.*.swp
+.webassets-cache/
+*.egg-info
+dist/
+build/
+wheelhouse/
+.cache/
+.pytest_cache/
+webpack-build-config.json
+*.py
+*.py
