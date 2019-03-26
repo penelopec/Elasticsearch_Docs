@@ -29,7 +29,7 @@ The first version of the _Events_ mapping stores the information about an Indico
 * __location__: Location/Place of the event. Stored as text for full-text search, only using ``standard`` analyzer.
 * __title__: Title of the event. Stored as text for full-text search. The ``title`` field is analyzed with the ``standard`` analyzer, ``title.english`` with the ``english`` one and the corresponding is done for ``title.french``. This three times analyzis helps improve query relevance.
 * __description__: Description of the event. Stored as text for full-text search. The ``title`` field is analyzed with the ``standard`` analyzer, ``title.english`` with the ``english`` one and the corresponding is done for ``title.french``. This three times analysis helps improve query relevance.
-* __speakers_chairs__: Speakers/charimans of the event. Stored as a nested object (This field cannot be flatten since the searches are done for a specific person of a specific organization.) with two fields:
+* __speaker_chairs__: Speakers/charimans of the event. Stored as a nested object (This field cannot be flatten since the searches are done for a specific person of a specific organization.) with two fields:
 	- __name__: Name of the speaker/chairman. Stored both as keyword and text, for exact match and full-text search.
 	- __affiliation__: Affiliation of the speaker/chairman. Stored as text for full-text search.
 
