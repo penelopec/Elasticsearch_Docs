@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# quick & dirty hack 
+SRCBASE=~/src/penelope
+SRCINDICO=$SRCBASE/indico
+SRCPLUGINS=$SRCBASE/indico-plugins
+
+# =============================================================================
+
+f_parse_opts(){
+    # quick & dirty hack 
+    PLUGIN=$1
+}
+
+f_update_src(){
+    cd $SRCPLUGINS
+    git pull
+}
+
+f_venv() {
+    source ~/.venv/bin/activate
+}
+
+f_build_wheel(){
+    cd $SRCINDICO
+    if [ ! -d dist ]; then 
+        mkdir dist
+    fi
+    python ./bin/maintenance/build-wheel.py plugin ../indico-plugins/$PLUGIN --add-version-suffix
+}
+
+f_get_wheel(){
+    WHEEL=`ls -tr $SRCINDICO/dist/*${PLUGIN}* | tail -1`
+    echo $WHEEL
+}
+
+f_deploy(){
+    pip install $WHEEL
+}
+
+# =============================================================================
+
+f_run_step(){
+    # execute function
+    $1
+
+    # evaluate the return code
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "something went wrong. Aborting."
+        exit $rc
+    fi
+}
+
+# =============================================================================
+
+
+f_parse_opts $@
+
+f_run_step f_update_src
+f_run_step f_venv
+f_run_step f_build_wheel
+f_run_step f_get_wheel
+f_run_step f_deploy
