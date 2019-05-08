@@ -110,28 +110,30 @@ operation = dict(index=mapping)
 js += json.dumps(operation)
 js += '\n'
 js += event1.data
+js += '\n'
 
 mapping = dict(_index='indico', _type='events', _id='5678')
 operation = dict(index=mapping)
 js += json.dumps(operation)
 js += '\n'
 js += event2.data
+js += '\n'
 
 mapping = dict(_index='indico', _type='contributions', _id='12')
 operation = dict(index=mapping)
 js += json.dumps(operation)
 js += '\n'
 js += contribution1.data
+js += '\n'
 
 mapping = dict(_index='indico', _type='contributions', _id='34')
 operation = dict(index=mapping)
 js += json.dumps(operation)
 js += '\n'
 js += contribution2.data
-
 js += '\n'
 
-print '\n' + js
+print js
 
 es_url = ''
 es_username = ''
