@@ -1,3 +1,9 @@
+The CERN version of the mappings is at: 
+https://gitlab.cern.ch/webservices/cern-search/cern-search-rest-api/blob/master/documentation/mappings/indico.md
+and the JSON files are at:
+https://github.com/inveniosoftware-contrib/cern-search/tree/master/cern_search_rest_api/modules/cernsearch/mappings/indico/v6/cernsearch-indico
+
+
 # Indico Instance
 
 No denormalization has been used due to the nature of the user use cases. There is a high number of updates, which would result in an even higher number of updates to handle the denormalized information. Application-side joins are used instead. 
