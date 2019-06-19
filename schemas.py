@@ -120,7 +120,7 @@ def _get_subcontribution_acl(subcontribution):
 
 def _get_eventnote_acl(eventnote):
     event_id = eventnote.event_id
-    contribution_id = eventnote.contribution_id
+    contribution_id = eventnote.subcontribution.contribution_id if eventnote.subcontribution.id else eventnote.contribution.id
     if contribution_id:
         obj = Contribution.get_one(contribution_id)
         return _get_contribution_acl(obj)
@@ -144,6 +144,10 @@ def _get_attachment_contributionid(attachment):
 
 def _get_attachment_subcontributionid(attachment):
     return attachment.folder.subcontribution.id if attachment.folder.link_type == LinkType.subcontribution else None
+
+
+def _get_eventnote_contributionid(eventnote):
+    return eventnote.subcontribution.contribution.id if eventnote.subcontribution.id else eventnote.contribution.id
 
 
 class PersonLinkSchema(mm.Schema):
@@ -231,7 +235,7 @@ class EventNoteSchema(mm.ModelSchema):
     url = mm.String(attribute='event.external_url')
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
-    contribution_id = mm.Integer(attribute='contribution_id')
+    contribution_id = mm.Function(_get_eventnote_contributionid)
     subcontribution_id = mm.Integer(attribute='subcontribution_id')
     creation_date = mm.DateTime(attribute='current_revision.created_dt')
     content = mm.String(attribute='html')
