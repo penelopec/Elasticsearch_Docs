@@ -15,7 +15,7 @@ from indico.modules.events import Event
 from indico.modules.events.models.events import EventType
 from indico.modules.events.models.persons import EventPersonLink
 
-import tika
+import tika    # for test purposes
 from tika import parser
 
 
@@ -60,13 +60,9 @@ def _get_identifiers(principal):
 def _get_category_path(obj):
     if isinstance(obj, Event):
         event_id = obj.id
-    elif isinstance(obj, Contribution):
-        event_id = obj.event.id
-    elif isinstance(obj, SubContribution):
-        event_id = obj.event.id
     elif isinstance(obj, Attachment):
         event_id = obj.folder.event.id
-    elif isinstance(obj, EventNote):
+    else: 
         event_id = obj.event.id
     event = Event.get_one(event_id)
     return event.category.chain_titles[1:]
@@ -74,8 +70,7 @@ def _get_category_path(obj):
 
 def _get_event_acl(event):
     if event.effective_protection_mode == ProtectionMode.public:
-        # Probably we could skip sending any other ACL entries in this case...
-        acl = ['ANONYMOUS']
+        acl = []
     else:
         acl = set(itertools.chain.from_iterable(_get_identifiers(x.principal) for x in event.acl_entries))
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
@@ -123,9 +118,20 @@ def _get_subcontribution_acl(subcontribution):
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
+def _get_eventnote_acl(eventnote):
+    event_id = eventnote.event_id
+    contribution_id = eventnote.contribution_id
+    if contribution_id:
+        obj = Contribution.get_one(contribution_id)
+        return _get_contribution_acl(obj)
+    else:
+        obj = Event.get_one(event_id)
+        return  _get_event_acl(obj)
+
+
 def _get_attachment_content(attachment):
     if attachment.type == AttachmentType.file:
-        tika.initVM()
+        tika.initVM()   # for test purposes
         parsedfile = parser.from_file(attachment.absolute_download_url) #, serverEndpoint=self.tika_server)
         return parsedfile["content"]
     else:
@@ -221,6 +227,23 @@ class SubContributionSchema(mm.ModelSchema):
                   'event_id', 'contribution_id', 'list_of_persons', 'start_date', 'title', 'url')
 
 
+class EventNoteSchema(mm.ModelSchema):
+    url = mm.String(attribute='event.external_url')
+    category_path = mm.Function(_get_category_path)
+    event_id = mm.Integer(attribute='event_id')
+    contribution_id = mm.Integer(attribute='contribution_id')
+    subcontribution_id = mm.Integer(attribute='subcontribution_id')
+    creation_date = mm.DateTime(attribute='current_revision.created_dt')
+    content = mm.String(attribute='html')
+    _access = mm.Function(_get_eventnote_acl)
+
+    class Meta:
+        model = Event
+        fields = ('_access', 'category_path', 'creation_date', 'id',
+                  'event_id', 'contribution_id', 'subcontribution_id', 'content', 'url')
+
+
+
 # If you want to test this quickly, keep the code below and the file as indico/web/blueprint.py
 # and go to https://yourinstance/schema-test/event/EVENTID
 
@@ -246,3 +269,8 @@ def contribution_test(contribution_id):
 def subcontribution_test(subcontribution_id):
     subcontribution = SubContribution.get_one(subcontribution_id)
     return SubContributionSchema().jsonify(subcontribution)
+
+@bp.route('/schema-test/note/<int:note_id>/')
+def note_test(note_id):
+    note = EventNote.get_one(note_id)
+    return EventNoteSchema().jsonify(note)
