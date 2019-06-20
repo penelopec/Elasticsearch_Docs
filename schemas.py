@@ -70,7 +70,6 @@ def _get_event_acl(event):
         acl = ['ANONYMOUS']
     else:
         acl = set(itertools.chain.from_iterable(_get_identifiers(x.principal) for x in event.acl_entries))
-        acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
@@ -85,7 +84,8 @@ def _get_attachment_acl(attachment):
         principals = linked_object.get_access_list()
 
     acl = set(itertools.chain.from_iterable(_get_identifiers(x) for x in principals))
-    acl.add('ANONYMOUS')
+    if not len(acl):
+        acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
@@ -98,7 +98,8 @@ def _get_obj_acl(obj):
         principals = obj.get_access_list()
 
     acl = set(itertools.chain.from_iterable(_get_identifiers(x) for x in principals))
-    acl.add('ANONYMOUS')
+    if not len(acl):
+        acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
