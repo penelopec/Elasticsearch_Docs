@@ -91,7 +91,6 @@ def _get_attachment_acl(attachment):
 
 
 def _get_contribution_acl(obj):
-
     if obj.is_self_protected:
         principals = {p for p in obj.acl} | set(obj.get_manager_list(recursive=True))
     elif obj.is_inheriting and obj.is_self_protected:
@@ -120,7 +119,11 @@ def _get_subcontribution_acl(subcontribution):
 
 def _get_eventnote_acl(eventnote):
     event_id = eventnote.event_id
-    contribution_id = eventnote.subcontribution.contribution_id if eventnote.subcontribution.id else eventnote.contribution.id
+    event_id = eventnote.event_id
+    if eventnote.contribution or eventnote.subcontribution:
+        contribution_id =  eventnote.subcontribution.contribution.id if eventnote.subcontribution else eventnote.contribution.id
+    else:
+       contribution_id =  None
     if contribution_id:
         obj = Contribution.get_one(contribution_id)
         return _get_contribution_acl(obj)
@@ -147,7 +150,11 @@ def _get_attachment_subcontributionid(attachment):
 
 
 def _get_eventnote_contributionid(eventnote):
-    return eventnote.subcontribution.contribution.id if eventnote.subcontribution.id else eventnote.contribution.id
+    if eventnote.contribution or eventnote.subcontribution:
+        contribution_id =  eventnote.subcontribution.contribution.id if eventnote.subcontribution else eventnote.contribution.id
+    else:
+       contribution_id =  None
+    return contribution_id
 
 
 class PersonLinkSchema(mm.Schema):
