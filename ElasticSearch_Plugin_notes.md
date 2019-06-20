@@ -18,6 +18,8 @@ indico and the indico-plugins are using among other packages the following:
 
 The plugins that will interact with the ElasticSearch will utilize the _CERN Search_ (http://cernsearchdocs.web.cern.ch/cernsearchdocs/example/)
 
+Adrian's marshmallow schema to be used in ES: https://gist.github.com/ThiefMaster/bd78f52909ec963023ce2e368874dac6
+
 **CERN Search usefull links**
 * The architecture of the CERN Search is described at: http://cernsearch-admin-docs.web.cern.ch/cernsearch-admin-docs/architecture/ 
 * The ElasticSearch mappings are: https://github.com/inveniosoftware-contrib/cern-search/blob/master/documentation/mappings/indico.md
