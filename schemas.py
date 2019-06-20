@@ -11,9 +11,11 @@ from indico.modules.attachments.models.attachments import Attachment, Attachment
 from indico.modules.events.contributions.models.contributions import Contribution
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.notes.models.notes import EventNote
+from indico.modules.events.sessions.models.sessions import Session
 from indico.modules.events import Event
 from indico.modules.events.models.events import EventType
 from indico.modules.events.models.persons import EventPersonLink
+from indico.web.flask.util import url_for
 
 import tika    # for test purposes
 from tika import parser
@@ -29,14 +31,9 @@ def _get_location(obj):
 
 
 def _get_location_subcontribution(subcontribution):
-    contribution_id = subcontribution.contribution_id
+    contribution_id = subcontribution.contribution.id
     obj = Contribution.get_one(contribution_id)
-    if obj.venue_name and obj.room_name:
-        return '{}: {}'.format(obj.venue_name, obj.room_name)
-    elif obj.venue_name or obj.room_name:
-        return obj.venue_name or obj.room_name
-    else:
-        return None
+    return _get_location(obj)
 
 
 def _get_identifiers(principal):
@@ -62,7 +59,7 @@ def _get_category_path(obj):
         event_id = obj.id
     elif isinstance(obj, Attachment):
         event_id = obj.folder.event.id
-    else: 
+    else:
         event_id = obj.event.id
     event = Event.get_one(event_id)
     return event.category.chain_titles[1:]
@@ -70,9 +67,10 @@ def _get_category_path(obj):
 
 def _get_event_acl(event):
     if event.effective_protection_mode == ProtectionMode.public:
-        acl = []
+        acl = ['ANONYMOUS']
     else:
         acl = set(itertools.chain.from_iterable(_get_identifiers(x.principal) for x in event.acl_entries))
+        acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
@@ -87,10 +85,11 @@ def _get_attachment_acl(attachment):
         principals = linked_object.get_access_list()
 
     acl = set(itertools.chain.from_iterable(_get_identifiers(x) for x in principals))
+    acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
-def _get_contribution_acl(obj):
+def _get_obj_acl(obj):
     if obj.is_self_protected:
         principals = {p for p in obj.acl} | set(obj.get_manager_list(recursive=True))
     elif obj.is_inheriting and obj.is_self_protected:
@@ -99,34 +98,29 @@ def _get_contribution_acl(obj):
         principals = obj.get_access_list()
 
     acl = set(itertools.chain.from_iterable(_get_identifiers(x) for x in principals))
+    acl.add('ANONYMOUS')
     return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
 
 
 def _get_subcontribution_acl(subcontribution):
-    contribution_id = subcontribution.contribution_id
+    contribution_id = subcontribution.contribution.id
     obj = Contribution.get_one(contribution_id)
-
-    if obj.is_self_protected:
-        principals = {p for p in obj.acl} | set(obj.get_manager_list(recursive=True))
-    elif obj.is_inheriting and obj.is_self_protected:
-        principals = {p for p in obj.acl} | set(obj.get_manager_list(recursive=True))
-    else:
-        principals = obj.get_access_list()
-
-    acl = set(itertools.chain.from_iterable(_get_identifiers(x) for x in principals))
-    return {'read': sorted(acl), 'owner': [], 'update': [], 'delete': []}
+    return  _get_obj_acl(obj)
 
 
 def _get_eventnote_acl(eventnote):
     event_id = eventnote.event_id
-    event_id = eventnote.event_id
+    session_id = eventnote.session.id if eventnote.session else None
+    contribution_id =  None
     if eventnote.contribution or eventnote.subcontribution:
-        contribution_id =  eventnote.subcontribution.contribution.id if eventnote.subcontribution else eventnote.contribution.id
-    else:
-       contribution_id =  None
+        contribution_id = eventnote.subcontribution.contribution.id if eventnote.subcontribution else eventnote.contribution.id
+
     if contribution_id:
         obj = Contribution.get_one(contribution_id)
-        return _get_contribution_acl(obj)
+        return  _get_obj_acl(obj)
+    elif session_id:
+        obj = Session.get_one(session_id)
+        return  _get_obj_acl(obj)
     else:
         obj = Event.get_one(event_id)
         return  _get_event_acl(obj)
@@ -150,11 +144,22 @@ def _get_attachment_subcontributionid(attachment):
 
 
 def _get_eventnote_contributionid(eventnote):
+    contribution_id =  None
     if eventnote.contribution or eventnote.subcontribution:
         contribution_id =  eventnote.subcontribution.contribution.id if eventnote.subcontribution else eventnote.contribution.id
-    else:
-       contribution_id =  None
     return contribution_id
+
+
+def _get_contribution_url(obj):
+    return url_for('contributions.display_contribution', obj, _external=True)
+
+
+def _get_subcontribution_url(obj):
+    return url_for('contributions.display_subcontribution', obj, _external=True)
+
+
+def _get_eventnote_url(obj):
+    return url_for('event_notes.view', obj, _external=True)
 
 
 class PersonLinkSchema(mm.Schema):
@@ -180,8 +185,8 @@ class EventSchema(mm.ModelSchema):
 
     class Meta:
         model = Event
-        fields = ('_access', 'category_path', 'creation_date', 'description', 'end_date', 'event_type', 'id',
-                  'location', 'speakers_chairs', 'start_date', 'title', 'url')
+        fields = ('_access', 'id', 'category_path', 'event_type', 'creation_date', 'start_date', 'end_date',
+                  'location', 'title', 'description', 'speakers_chairs', 'url')
 
 
 class AttachmentSchema(mm.ModelSchema):
@@ -199,47 +204,47 @@ class AttachmentSchema(mm.ModelSchema):
 
     class Meta:
         model = Event
-        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'subcontribution_id', 'url',
-                  'creation_date', 'filename', 'content')
+        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'subcontribution_id',
+                  'creation_date', 'filename', 'content', 'url')
 
 
 class ContributionSchema(mm.ModelSchema):
-    url = mm.String(attribute='event.external_url')
+    url = mm.Function(_get_contribution_url)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
-    creation_date = mm.DateTime(attribute='created_dt')
+    creation_date = mm.DateTime(attribute='created_dt')  # does not return any value
     start_date = mm.DateTime(attribute='start_dt')
     end_date = mm.DateTime(attribute='end_dt')
     location = mm.Function(_get_location)
     list_of_persons = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
-    _access = mm.Function(_get_contribution_acl)
+    _access = mm.Function(_get_obj_acl)
 
     class Meta:
         model = Event
-        fields = ('_access', 'category_path', 'creation_date', 'description', 'end_date', 'id', 'location',
-                  'event_id', 'list_of_persons', 'start_date', 'title', 'url')
+        fields = ('_access', 'id', 'category_path', 'event_id', 'creation_date', 'start_date', 'end_date', 'location',
+                  'title', 'description', 'list_of_persons', 'url')
 
 
 class SubContributionSchema(mm.ModelSchema):
-    url = mm.String(attribute='event.external_url')
+    url = mm.Function(_get_subcontribution_url)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event.id')
     contribution_id = mm.Integer(attribute='contribution_id')
-    creation_date = mm.DateTime(attribute='created_dt')
-    start_date = mm.DateTime(attribute='start_dt')
-    end_date = mm.DateTime(attribute='end_dt')
+    creation_date = mm.DateTime(attribute='created_dt')  # does not return any value
+    start_date = mm.DateTime(attribute='start_dt')  # does not return any value
+    end_date = mm.DateTime(attribute='end_dt')  # does not return any value
     location = mm.Function(_get_location_subcontribution)
     list_of_persons = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
     _access = mm.Function(_get_subcontribution_acl)
 
     class Meta:
         model = Event
-        fields = ('_access', 'category_path', 'creation_date', 'description', 'end_date', 'id', 'location',
-                  'event_id', 'contribution_id', 'list_of_persons', 'start_date', 'title', 'url')
+        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'creation_date', 'start_date',
+                  'end_date', 'location', 'title', 'description', 'list_of_persons', 'url')
 
 
 class EventNoteSchema(mm.ModelSchema):
-    url = mm.String(attribute='event.external_url')
+    url = mm.Function(_get_eventnote_url)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
     contribution_id = mm.Function(_get_eventnote_contributionid)
@@ -250,8 +255,8 @@ class EventNoteSchema(mm.ModelSchema):
 
     class Meta:
         model = Event
-        fields = ('_access', 'category_path', 'creation_date', 'id',
-                  'event_id', 'contribution_id', 'subcontribution_id', 'content', 'url')
+        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'subcontribution_id', 'creation_date',
+                  'content', 'url')
 
 
 
