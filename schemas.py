@@ -109,7 +109,7 @@ def _get_subcontribution_acl(subcontribution):
 
 
 def _get_eventnote_acl(eventnote):
-    event_id = eventnote.event_id
+    event_id = eventnote.event.id
     session_id = eventnote.session.id if eventnote.session else None
     contribution_id =  None
     if eventnote.contribution or eventnote.subcontribution:
@@ -173,7 +173,7 @@ class PersonLinkSchema(mm.Schema):
 
 
 class EventSchema(mm.ModelSchema):
-    url = mm.String(attribute='external_url')
+    _access = mm.Function(_get_event_acl)
     category_path = mm.Function(_get_category_path)
     event_type = EnumField(EventType, attribute='type_')
     creation_date = mm.DateTime(attribute='created_dt')
@@ -181,7 +181,7 @@ class EventSchema(mm.ModelSchema):
     end_date = mm.DateTime(attribute='end_dt')
     location = mm.Function(_get_location)
     speakers_chairs = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
-    _access = mm.Function(_get_event_acl)
+    url = mm.String(attribute='external_url')
 
     class Meta:
         model = Event
@@ -192,15 +192,13 @@ class EventSchema(mm.ModelSchema):
 class AttachmentSchema(mm.ModelSchema):
     _access = mm.Function(_get_attachment_acl)
     category_path = mm.Function(_get_category_path)
-    url = mm.String(attribute='absolute_download_url')
-    name = mm.String(attribute='title')
-    creation_date = mm.DateTime(attribute='modified_dt')
-    filename = mm.String(attribute='file.filename')
-    content = mm.String(default='Some File Content')    #Function(_get_attachment_content)
     event_id = mm.Integer(attribute='folder.event.id')
     contribution_id = mm.Function(_get_attachment_contributionid)
     subcontribution_id = mm.Function(_get_attachment_subcontributionid)
-
+    creation_date = mm.DateTime(attribute='modified_dt')
+    filename = mm.String(attribute='file.filename')
+    content = mm.Function(_get_attachment_content)
+    url = mm.String(attribute='absolute_download_url')
 
     class Meta:
         model = Event
@@ -209,7 +207,7 @@ class AttachmentSchema(mm.ModelSchema):
 
 
 class ContributionSchema(mm.ModelSchema):
-    url = mm.Function(_get_contribution_url)
+    _access = mm.Function(_get_obj_acl)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
     creation_date = mm.DateTime(attribute='created_dt')  # does not return any value
@@ -217,7 +215,7 @@ class ContributionSchema(mm.ModelSchema):
     end_date = mm.DateTime(attribute='end_dt')
     location = mm.Function(_get_location)
     list_of_persons = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
-    _access = mm.Function(_get_obj_acl)
+    url = mm.Function(_get_contribution_url)
 
     class Meta:
         model = Event
@@ -226,7 +224,7 @@ class ContributionSchema(mm.ModelSchema):
 
 
 class SubContributionSchema(mm.ModelSchema):
-    url = mm.Function(_get_subcontribution_url)
+    _access = mm.Function(_get_subcontribution_acl)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event.id')
     contribution_id = mm.Integer(attribute='contribution_id')
@@ -235,7 +233,7 @@ class SubContributionSchema(mm.ModelSchema):
     end_date = mm.DateTime(attribute='end_dt')  # does not return any value
     location = mm.Function(_get_location_subcontribution)
     list_of_persons = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
-    _access = mm.Function(_get_subcontribution_acl)
+    url = mm.Function(_get_subcontribution_url)
 
     class Meta:
         model = Event
@@ -244,19 +242,19 @@ class SubContributionSchema(mm.ModelSchema):
 
 
 class EventNoteSchema(mm.ModelSchema):
-    url = mm.Function(_get_eventnote_url)
+    _access = mm.Function(_get_eventnote_acl)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
     contribution_id = mm.Function(_get_eventnote_contributionid)
     subcontribution_id = mm.Integer(attribute='subcontribution_id')
     creation_date = mm.DateTime(attribute='current_revision.created_dt')
     content = mm.String(attribute='html')
-    _access = mm.Function(_get_eventnote_acl)
+    url = mm.Function(_get_eventnote_url)
 
     class Meta:
         model = Event
-        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'subcontribution_id', 'creation_date',
-                  'content', 'url')
+        fields = ('_access', 'id', 'category_path', 'event_id', 'contribution_id', 'subcontribution_id', 
+                  'creation_date', 'content', 'url')
 
 
 
