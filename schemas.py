@@ -211,7 +211,7 @@ class ContributionSchema(mm.ModelSchema):
     _access = mm.Function(_get_obj_acl)
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event_id')
-    creation_date = mm.DateTime(attribute='created_dt')  # does not return any value
+    # creation_date = mm.DateTime(attribute='created_dt')  # field does not exist, remove from mapping
     start_date = mm.DateTime(attribute='start_dt')
     end_date = mm.DateTime(attribute='end_dt')
     location = mm.Function(_get_location)
@@ -229,9 +229,9 @@ class SubContributionSchema(mm.ModelSchema):
     category_path = mm.Function(_get_category_path)
     event_id = mm.Integer(attribute='event.id')
     contribution_id = mm.Integer(attribute='contribution_id')
-    creation_date = mm.DateTime(attribute='created_dt')  # does not return any value
-    start_date = mm.DateTime(attribute='start_dt')  # does not return any value
-    end_date = mm.DateTime(attribute='end_dt')  # does not return any value
+    # creation_date = mm.DateTime(attribute='created_dt')   # field does not exist, remove from mapping
+    # start_date = mm.DateTime(attribute='start_dt')    # field does not exist, remove from mapping
+    # end_date = mm.DateTime(attribute='end_dt')    # field does not exist, remove from mapping
     location = mm.Function(_get_location_subcontribution)
     list_of_persons = mm.Nested(PersonLinkSchema, attribute='person_links', many=True)
     url = mm.Function(_get_subcontribution_url)
