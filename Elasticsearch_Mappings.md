@@ -56,7 +56,7 @@ The first version of the _Contributions_ mapping stores the information about an
 * __id__: ID of the contribution. Stored as keyword for exact match queries.
 * __caterogy path__: Array containing the different path levels to which the contribution belongs to. Stored as keyword for exact match queries.
 * __event_id__: ID of the event to which the contribution belongs to. Stored as keyword for exact match queries.
-* __creation_date__: Creation date of the contribution. Field does not exist, remove from mapping.
+* ``__creation_date__``: Creation date of the contribution. Field does not exist, remove from mapping.
 * __start_date__: Starting date of the contribution. Stored as date with 'YYYY-MM-DDZHH:MM' format.
 * __end_date__: Ending date of the contribution. Stored as date with 'YYYY-MM-DDZHH:MM' format.
 * __location__: Location/Place of the contribution. Stored as text for full-text search, only using ``standard`` analyzer.
@@ -86,9 +86,9 @@ The first version of the _Subcontributions_ mapping stores the information about
 * __caterogy path__: Array containing the different path levels to which the subcontribution belongs to. Stored as keyword for exact match queries.
 * __event_id__: ID of the event to which the subcontribution belongs to. Stored as keyword for exact match queries.
 * __contribution_id__: ID of the contribution to which the subcontribution belongs to. Stored as keyword for exact match queries.
-* __creation_date__: Creation date of the subcontribution.  Field does not exist, remove from mapping.
-* __start_date__: Starting date of the subcontribution.  Field does not exist, remove from mapping.
-* __end_date__: Ending date of the subcontribution.  Field does not exist, remove from mapping.
+* ``__creation_date__``: Creation date of the subcontribution.  Field does not exist, remove from mapping.
+* ``__start_date__``: Starting date of the subcontribution.  Field does not exist, remove from mapping.
+* ``__end_date__``: Ending date of the subcontribution.  Field does not exist, remove from mapping.
 * __location__: Location/Place of the subcontribution. Stored as text for full-text search, only using ``standard`` analyzer.
 * __title__: Title of the subcontribution. Stored as text for full-text search. The ``title`` field is analyzed with the ``standard`` analyzer, ``title.english`` with the ``english`` one and the corresponding is done for ``title.french``. This three times analyzis helps improve query relevance.
 * __description__: Description of the subcontribution. Stored as text for full-text search. The ``title`` field is analyzed with the ``standard`` analyzer, ``title.english`` with the ``english`` one and the corresponding is done for ``title.french``. This three times analysis helps improve query relevance.
