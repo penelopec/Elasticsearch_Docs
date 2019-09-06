@@ -24,4 +24,5 @@ Adrian's marshmallow schema to be used in ES: https://gist.github.com/ThiefMaste
 * The architecture of the CERN Search is described at: http://cernsearch-admin-docs.web.cern.ch/cernsearch-admin-docs/architecture/ 
 * The ElasticSearch mappings are: https://github.com/inveniosoftware-contrib/cern-search/blob/master/documentation/mappings/indico.md
 * ElasticSearch JSON files: https://github.com/inveniosoftware-contrib/cern-search/tree/master/cern_search_rest_api/modules/cernsearch/mappings/indico/v6/cernsearch-indico
+* JSON Schema: http://cernsearchdocs.web.cern.ch/cernsearchdocs/usage/schemas/
 
